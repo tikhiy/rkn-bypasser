@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"github.com/dimuls/rkn-bypasser/proxy"
-	"github.com/getlantern/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
@@ -14,7 +13,7 @@ func main() {
 	app := cli.NewApp()
 
 	app.Usage = "RNK bypasser proxy server"
-	app.Version = "1.1"
+	app.Version = "1.2"
 	app.Author = "Vadim Chernov"
 	app.Email = "dimuls@yandex.ru"
 
@@ -35,11 +34,6 @@ func main() {
 			Usage:  "use additional blocked IPs file",
 			EnvVar: "WITH_ADDITIONAL_IPS",
 		},
-		cli.BoolFlag{
-			Name:   "with-tapdance",
-			Usage:  "try tapdance before tor",
-			EnvVar: "WITH_TAPDANCE",
-		},
 	}
 
 	app.Action = run
@@ -53,22 +47,19 @@ func main() {
 func run(c *cli.Context) error {
 	if !c.IsSet("bind-addr") {
 		logrus.Fatal("Set BIND_ADDR environment variable or -bind-addr flag")
-		return errors.New("bind-addr is not set")
 	}
 
 	bindAddr := c.String("bind-addr")
 	torAddr := c.String("tor-addr")
 	withAdditionalIPs := c.Bool("with-additional-ips")
-	withTapdance := c.Bool("with-tapdance")
 
 	logrus.WithFields(logrus.Fields{
 		"bindAddr":          bindAddr,
 		"torAddr":           torAddr,
 		"withAdditionalIPs": withAdditionalIPs,
-		"withTapdance":      withAdditionalIPs,
-	}).Printf("Running proxy")
+	}).Info("Running proxy")
 
-	proxy.Run(bindAddr, torAddr, withAdditionalIPs, withTapdance)
+	proxy.Run(bindAddr, torAddr, withAdditionalIPs)
 
 	return nil
 }

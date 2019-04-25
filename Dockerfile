@@ -22,4 +22,4 @@ COPY additional-ips.yml /
 
 EXPOSE 8000
 
-ENTRYPOINT ["/rkn-bypasser", "--with-additional-ips", "--with-tapdance"]
+ENTRYPOINT ["/rkn-bypasser", "--with-additional-ips"]
