@@ -1,11 +1,11 @@
-FROM alpine:3.8 AS builder
+FROM alpine:3.9 AS builder
 
-ARG TOR_VERSION=0.3.2.11
+ARG TOR_VERSION=0.4.0.4-rc
 
-RUN apk update && \
-apk add make automake autoconf gcc libtool curl libevent-dev \
-libssl1.0 musl musl-dev libgcc openssl openssl-dev openssh && \
-curl https://dist.torproject.org/tor-${TOR_VERSION}.tar.gz | tar xz
+RUN apk add --no-cache make automake autoconf gcc libtool curl libevent-dev \
+musl musl-dev libgcc openssl openssl-dev openssh zlib-dev
+
+RUN curl https://dist.torproject.org/tor-${TOR_VERSION}.tar.gz | tar xz
 
 WORKDIR tor-${TOR_VERSION}
 
@@ -17,16 +17,15 @@ echo 'DataDirectory /var/lib/tor' >> /etc/torrc
 
 
 
-FROM alpine:3.8
+FROM alpine:3.9
 
-RUN apk update && \
-    apk add libevent libssl1.0 musl openssl openssh
+RUN apk add --no-cache libevent musl openssl openssh
 
 WORKDIR /
 
-EXPOSE 9150
-
 COPY --from=builder /usr/local/bin/tor /
 COPY --from=builder /etc/torrc /torrc
+
+EXPOSE 9150
 
 ENTRYPOINT ["/tor", "-f", "/torrc"]
