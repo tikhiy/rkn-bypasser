@@ -5,7 +5,10 @@ services:
   tor:
     container_name: tor
     image: tor
-    build: ./docker/tor
+    build:
+      context: ./docker/tor
+      args:
+        - TOR_VERSION=0.4.1.6
     volumes:
       - tor-data:/var/lib/tor
     restart: unless-stopped
