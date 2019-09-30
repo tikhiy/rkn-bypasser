@@ -26,6 +26,4 @@ WORKDIR /
 COPY --from=builder /usr/local/bin/tor /
 COPY --from=builder /etc/torrc /torrc
 
-EXPOSE 9150
-
 ENTRYPOINT ["/tor", "-f", "/torrc"]
