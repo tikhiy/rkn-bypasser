@@ -14,25 +14,29 @@ func main() {
 
 	app.Usage = "RNK bypasser proxy server"
 	app.Version = "1.2"
-	app.Author = "Vadim Chernov"
-	app.Email = "dimuls@yandex.ru"
+	app.Authors = []*cli.Author{
+		{
+			Name:  "Vadim Chernov",
+			Email: "dimuls@yandex.ru",
+		},
+	}
 
 	app.Flags = []cli.Flag{
-		cli.StringFlag{
+		&cli.StringFlag{
 			Name:   "bind-addr",
 			Usage:  "bind address",
-			EnvVar: "BIND_ADDR",
+			EnvVars: []string{"BIND_ADDR"},
 		},
-		cli.StringFlag{
+		&cli.StringFlag{
 			Name:   "tor-addr",
 			Usage:  "tor proxy server address",
-			EnvVar: "TOR_ADDR",
+			EnvVars: []string{"TOR_ADDR"},
 			Value:  "127.0.0.1:9050",
 		},
-		cli.BoolFlag{
+		&cli.BoolFlag{
 			Name:   "with-additional-ips",
 			Usage:  "use additional blocked IPs file",
-			EnvVar: "WITH_ADDITIONAL_IPS",
+			EnvVars: []string{"WITH_ADDITIONAL_IPS"},
 		},
 	}
 
