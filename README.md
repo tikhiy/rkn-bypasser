@@ -1,41 +1,42 @@
-# rkn-bypasser
+# Что это такое?
 
-This is [roskomnadzor's](https://eng.rkn.gov.ru/) blocker bypasser.
+Это SOCKS5 прокси-сервер для обхода блокировок
+[Роскомнадзора](https://eng.rkn.gov.ru/), которое поставляется в виде
+приложения для запуска в системном лотке (tray) или сервера для запуска в консоли.
 
-# How it works
+# Как это работает?
 
-It loads blocked IPs from [roskomsvoboda](http://reestr.rublacklist.net/api/ips) and run local [SOCKS5 proxy](https://github.com/armon/go-socks5) with special dialer. This dialer checks requested IP if it blocked. If IP blocked it uses dialer through the [TOR](https://www.torproject.org/). If not it uses default net dialer. Here's how evil roskomnadzor blocking machine is bypassed.
+Загружается список заблокированных IP адресов из
+[API Роскомсвободы](https://reestr.rublacklist.net/article/api/)
+и запускается специальный SOCKS5 прокси-сервер со специальной функцией подключения.
+Эта функция проверяет к какому IP-адресу выполняется подключение: если IP
+заблокирован, то подключение выполняется через [Tor](https://www.torproject.org/);
+а если IP не заблокрирован, то — напрямую.
 
-# How to use it
+Таким образом скорость подключения и передачи данных к не заблокированным
+ресурсам остается на прежнем уровне, а заблокированные ресурсы становятся
+доступными.
 
-## Using docker
+Tor-сервер встроен в исполняемые файлы и, при их запуске, распаковывается в
+текущую директорию.
 
-You need [docker](https://www.docker.com/community-edition). Just open project root in terminal and enter:
-```
-$ docker-compose up --build -d
-``` 
-It will build docker and run it. You only need to configure your browser 
-(and any other soft) to use SOCKS5 proxy at `127.0.0.1:8000`.
+# Где скачать?
 
-## Manually build
+Приложение и сервер доступны для скачивания в скомпилированном виде в
+[разделе релизов](https://github.com/dimuls/rkn-bypasser/releases).
 
-You can build it by your own using [go](https://golang.org/dl/):
-```
-$ go install github.com/dimuls/rkn-bypasser
-```
+# Как пользоваться?
 
-Now you can use it:
-```
-$ rkn-bypasser --bind-addr 127.0.0.1:8000
-```
+1. Нужно запустить приложение или сервер.
+2. Дождаться когда прокси-сервер запуститься.
+3. Настроить в браузере (или в другом приложение) подключение через SOCKS-прокси
+где, в качестве адреса, указать `127.0.0.1:8000`.
 
-## Does it work on Windows?
+# Есть вопросы?
 
-Sure. All this setups possible to do on Windows. You can write me if you need any help.
- 
-# Contacts
-
-Feel free to contact me:
+Пишите мне на:
 
 * Email: dimuls@yandex.ru
 * Telegram: @dimuls
+
+Буду рад помочь
