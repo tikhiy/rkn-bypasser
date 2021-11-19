@@ -28,21 +28,25 @@ import (
 const (
 	proxyNetwork = "tcp"
 
-	defaultBindAddr               = "127.0.0.1:8000"
+	defaultListenAddr             = "127.0.0.1:8000"
 	defaultBlockedIPsURI          = "https://reestr.rublacklist.net/api/v2/ips/json"
 	defaultBlockedIPsUpdatePeriod = 3 * time.Hour
-	defaultTorPath                = "./tor"
+	defaultTorPath                = "tor"
 )
 
-//go:generate curl https://dist.torproject.org/torbrowser/10.5.6/tor-win64-0.4.5.10.zip -o tor.zip
+var defaultTorArgs = []string{"--quiet"}
+
+//go:generate curl https://dist.torproject.org/torbrowser/11.0.1/tor-win64-0.4.6.8.zip -o tor.zip
 //go:embed tor.zip
 var torZIP []byte
 
 type Server struct {
-	bindAddr               string
+	listenAddr             string
 	blockedIPsURI          string
 	blockedIPsUpdatePeriod time.Duration
 	torPath                string
+	torrcFile              string
+	torArgs                []string
 	listenEvents           chan<- ServerListenEvent
 
 	blockedIPsMx sync.RWMutex
@@ -53,10 +57,11 @@ type Server struct {
 
 func NewServer(opts ...ServerOption) (*Server, error) {
 	s := &Server{
-		bindAddr:               defaultBindAddr,
+		listenAddr:             defaultListenAddr,
 		blockedIPsURI:          defaultBlockedIPsURI,
 		blockedIPsUpdatePeriod: defaultBlockedIPsUpdatePeriod,
 		torPath:                defaultTorPath,
+		torArgs:                defaultTorArgs,
 
 		blockedIPs: map[string]struct{}{},
 	}
@@ -78,9 +83,9 @@ func NewServer(opts ...ServerOption) (*Server, error) {
 
 type ServerOption func(s *Server)
 
-func WithBindAddr(addr string) ServerOption {
+func WithListenAddr(addr string) ServerOption {
 	return func(s *Server) {
-		s.bindAddr = addr
+		s.listenAddr = addr
 	}
 }
 
@@ -99,6 +104,18 @@ func WithBlockedIPsUpdatePeriod(period time.Duration) ServerOption {
 func WithTorPath(path string) ServerOption {
 	return func(s *Server) {
 		s.torPath = path
+	}
+}
+
+func WithTorrcFile(path string) ServerOption {
+	return func(s *Server) {
+		s.torrcFile = path
+	}
+}
+
+func WithTorArgs(args []string) ServerOption {
+	return func(s *Server) {
+		s.torArgs = args
 	}
 }
 
@@ -200,14 +217,14 @@ func uncompressZIP(ctx context.Context, archive io.ReaderAt, size int, destinati
 	return nil
 }
 
-func (s *Server) unzipTor(ctx context.Context) error {
+func (s *Server) initTorPath(ctx context.Context) error {
 
 	stat, err := os.Stat(s.torPath)
 	if err == nil {
 		if stat.IsDir() {
 			return nil
 		} else {
-			return fmt.Errorf("unexpected `tor` file found")
+			return fmt.Errorf("expected tor path is directory but file found")
 		}
 	}
 
@@ -297,7 +314,7 @@ func (s *Server) Listen(ctx context.Context) error {
 	s.logger.Info("initializing tor")
 	s.send(InitializingTor)
 
-	err = s.unzipTor(ctx)
+	err = s.initTorPath(ctx)
 	if err != nil {
 		if errors.Is(err, context.Canceled) {
 			return nil
@@ -314,7 +331,11 @@ func (s *Server) Listen(ctx context.Context) error {
 
 	s.logger.Info("tor initialized")
 
-	s.logger.Info("starting tor")
+	s.logger.With(
+		zap.String("tor_path", s.torPath),
+		zap.String("torrc_file", s.torrcFile),
+		zap.Strings("tor_args", s.torArgs),
+	).Info("starting tor")
 	s.send(StartingTor)
 
 	t, err := tor.Start(ctx, &tor.StartConf{
@@ -332,7 +353,8 @@ func (s *Server) Listen(ctx context.Context) error {
 			return os.Open(filepath.Join(s.torPath, "Data/Tor/geoip"))
 		},
 		TempDataDirBase: torTempDir,
-		ExtraArgs:       []string{"--quiet"},
+		TorrcFile:       s.torrcFile,
+		ExtraArgs:       s.torArgs,
 	})
 	if err != nil {
 		return fmt.Errorf("start tor: %w", err)
@@ -347,7 +369,8 @@ func (s *Server) Listen(ctx context.Context) error {
 
 	s.logger.Info("tor started")
 
-	s.logger.Info("starting proxy server")
+	s.logger.With(zap.String("listen_addr", s.listenAddr)).
+		Info("starting proxy server")
 	s.send(StartingProxy)
 
 	d := &net.Dialer{}
@@ -366,7 +389,7 @@ func (s *Server) Listen(ctx context.Context) error {
 		return d.DialContext(ctx, network, addr)
 	}))
 
-	l, err := net.Listen(proxyNetwork, s.bindAddr)
+	l, err := net.Listen(proxyNetwork, s.listenAddr)
 	if err != nil {
 		return fmt.Errorf("listen bind address: %w", err)
 	}

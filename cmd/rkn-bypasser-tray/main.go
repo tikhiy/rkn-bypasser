@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	_ "embed"
+	"errors"
 	"sync"
 	"time"
 
@@ -41,6 +42,9 @@ func enable() {
 		defer wg.Done()
 		err := proxyServer.Listen(ctx)
 		if err != nil {
+			if errors.Is(err, context.Canceled) {
+				return
+			}
 			listenErrors <- err
 		}
 	}()
@@ -66,7 +70,6 @@ func onReady() {
 	mEnabling.Disable()
 	mDisable.Hide()
 	mDisabling.Hide()
-	mExit.Disable()
 
 	for {
 		select {
@@ -78,26 +81,23 @@ func onReady() {
 				mEnable.Hide()
 				mEnabling.Hide()
 				mDisable.Show()
-				mExit.Enable()
 			case proxy.Stopped:
 				mEnable.Show()
 				mDisable.Hide()
 				mDisabling.Hide()
-				mExit.Enable()
 			}
 		case <-mEnable.ClickedCh:
 			mEnable.Hide()
 			mEnabling.Disable()
-			mExit.Disable()
 			enable()
 		case <-mDisable.ClickedCh:
 			disable()
 			mDisable.Hide()
 			mDisabling.Disable()
-			mExit.Disable()
 			wg.Wait()
 		case <-mExit.ClickedCh:
 			disable()
+			mEnabling.Hide()
 			mDisable.Hide()
 			mDisabling.Disable()
 			mExit.Disable()

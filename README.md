@@ -27,10 +27,44 @@ Tor-сервер встроен в исполняемые файлы и, при 
 
 # Как пользоваться?
 
+## Приложение rkn-bypasser-tray
+
 1. Нужно запустить приложение или сервер.
 2. Дождаться когда прокси-сервер запуститься.
 3. Настроить в браузере (или в другом приложении) подключение через SOCKS5-прокси
 где, в качестве адреса, указать `127.0.0.1:8000`.
+
+## Сервер rkn-bypasser
+
+Вывод справки:
+```
+rkn-bypasser.exe --help
+Usage:
+  rkn-bypasser [flags]
+
+Flags:
+      --config string           config file (default is ./rkn-bypasser.yaml)
+  -h, --help                    help for rkn-bypasser
+      --listen-address string   proxy server listen address (default "127.0.0.1:8000")
+      --tor-args stringArray    tor args to use (default [--quiet])
+      --tor-path string         tor path (default "tor")
+      --torrc string            torrc file path
+```
+
+Пример запуска с флагами:
+```
+rkn-bypasser.exe --listen-address 0.0.0.0:8000 --tor-args --quite,--help --tor-path tor --torrc path\to\torrc
+```
+
+Конфиг файл в формате yaml. Пример конфига:
+```
+listen-address: 0.0.0.0:8000
+tor-args:
+    - --quite
+    - --help
+tor-path: tor
+torrc: path\to\torrc
+```
 
 # Есть вопросы?
 
