@@ -47,7 +47,7 @@ func run(*cobra.Command, []string) {
 	s, err := proxy.NewServer(proxy.WithLogger(logger),
 		proxy.WithListenAddr(viper.GetString("listen-address")),
 		proxy.WithTorPath(viper.GetString("tor-path")),
-		proxy.WithTorrcFile(viper.GetString("torrc-file")),
+		proxy.WithTorrcFile(viper.GetString("torrc")),
 		proxy.WithTorArgs(viper.GetStringSlice("tor-args")))
 	if err != nil {
 		logger.Fatal("failed to create proxy server", zap.Error(err))
