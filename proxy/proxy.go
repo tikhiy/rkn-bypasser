@@ -36,7 +36,7 @@ const (
 
 var defaultTorArgs = []string{"--quiet"}
 
-//go:generate curl https://dist.torproject.org/torbrowser/11.0.1/tor-win64-0.4.6.8.zip -o tor.zip
+//go:generate curl https://dist.torproject.org/torbrowser/11.0.4/tor-win64-0.4.6.9.zip -o tor.zip
 //go:embed tor.zip
 var torZIP []byte
 
